@@ -15,8 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 import java.util.concurrent.Executors;
 
-public class KVServiceImpl implements KVService {
-    private static final Logger log = LoggerFactory.getLogger(KVServiceImpl.class);
+public class B10nicleKVService implements KVService {
+    private static final Logger log = LoggerFactory.getLogger(B10nicleKVService.class);
 
     private static final String CONTENT_TYPE_OCTET_STREAM = "application/octet-stream";
     private static final String CONTENT_TYPE_TEXT_PLAIN = "text/plain";
@@ -38,23 +38,25 @@ public class KVServiceImpl implements KVService {
     private HttpServer server;
     private boolean running;
 
-    public KVServiceImpl(int port, Dao<byte[]> dao) {
+    public B10nicleKVService(int port, Dao<byte[]> dao) {
         this.port = port;
         this.dao = dao;
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
         if (running) {
             throw new IllegalStateException("Service already started");
         }
 
         try {
-            server = HttpServer.create(new InetSocketAddress(port), 0);
-            server.createContext(STATUS_PATH, new StatusHandler());
-            server.createContext(ENTITY_PATH, new EntityHandler());
-            server.setExecutor(Executors.newCachedThreadPool());
-            server.start();
+            HttpServer localServer = HttpServer.create(new InetSocketAddress(port), 0);
+            localServer.createContext(STATUS_PATH, new StatusHandler());
+            localServer.createContext(ENTITY_PATH, new EntityHandler());
+            localServer.setExecutor(Executors.newCachedThreadPool());
+            localServer.start();
+
+            server = localServer;
             running = true;
         } catch (IOException e) {
             throw new RuntimeException("Failed to start HTTP server", e);
@@ -62,15 +64,20 @@ public class KVServiceImpl implements KVService {
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
         if (!running) {
             return;
         }
 
         running = false;
-        if (server != null) {
-            server.stop(0);
+
+        HttpServer localServer = server;
+        server = null;
+
+        if (localServer != null) {
+            localServer.stop(0);
         }
+
         try {
             dao.close();
         } catch (IOException e) {
