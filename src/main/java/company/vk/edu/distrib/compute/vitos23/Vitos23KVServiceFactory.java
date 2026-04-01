@@ -9,8 +9,8 @@ import java.io.IOException;
 public class Vitos23KVServiceFactory extends KVServiceFactory {
     @Override
     protected KVService doCreate(int port) throws IOException {
-        // Dao<byte[]> dao = new WalBackedDao("storage");
-        Dao<byte[]> dao = new InMemoryDao<>();
+        // Dao<byte[]> dao = new InMemoryDao<>();
+        Dao<byte[]> dao = new WalBackedDao("vitos23-storage");
         return new KVServiceImpl(port, dao);
     }
 }

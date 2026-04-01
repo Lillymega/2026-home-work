@@ -34,21 +34,23 @@ public class WalBackedDao implements Dao<byte[]> {
     }
 
     /// Restore [#storage] state from WAL.
-    /// This method must be called once in the constructor for implementation to be thread-safe.
+    /// This method must be called once before usage (e.g. in the constructor).
     private void replayLog() throws IOException {
-        while (true) {
-            int operationOrdinal = walFile.read();
-            if (operationOrdinal < 0) {
-                break;
+        lock.writeLock().lock();
+        try {
+            while (true) {
+                int operationOrdinal = walFile.read();
+                if (operationOrdinal < 0) {
+                    break;
+                }
+                replayOperation(operationOrdinal);
             }
-            replayOperation(operationOrdinal);
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
     /// Moved out of [#replayLog()] to fix Codacy's false positive "Avoid instantiating new objects inside loops"
-    @SuppressWarnings({
-            "PMD.ExhaustiveSwitchHasDefault", // it conflicts with opposite checkstyle rule
-    })
     private void replayOperation(int operationOrdinal) throws IOException {
         Operation operation = Arrays.stream(Operation.values())
                 .filter(op -> op.ordinal() == operationOrdinal)
@@ -58,7 +60,6 @@ public class WalBackedDao implements Dao<byte[]> {
         switch (operation) {
             case SET -> storage.put(key, readArray());
             case DELETE -> storage.remove(key);
-            default -> throw new AssertionError("impossible"); // for linter
         }
     }
 

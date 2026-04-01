@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SuppressWarnings("PMD.DoNotUseThreads") // false positive from Codacy
 class WalBackedDaoTest {
 
     private static final String TEST_KEY = "key1";
