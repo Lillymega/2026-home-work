@@ -5,9 +5,9 @@ import  company.vk.edu.distrib.compute.KVServiceFactory;
 
 import java.io.IOException;
 
-class LillymegaKVServiceFactory extends KVServiceFactory{
+public class LillymegaKVServiceFactory extends KVServiceFactory{
     @Override
     protected KVService doCreate(int port) throws IOException{
-        return new LillymegaKVService(port);
+        return new LillymegaKVService(port, new Dao<byte[]> dao);
     }
 }

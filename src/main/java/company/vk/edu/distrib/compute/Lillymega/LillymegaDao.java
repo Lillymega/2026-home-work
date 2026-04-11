@@ -16,6 +16,7 @@ public class LillymegaDao implements Dao<byte[]> {
         if (value == null){
             throw new NoSuchElementException("No value for key: " + key);
         }
+        return value;
     }
 
     @Override
@@ -24,6 +25,7 @@ public class LillymegaDao implements Dao<byte[]> {
         if (value == null) {
             throw new IllegalArgumentException("Value must be not null");
         }
+        storage.put(key, value);
     }
 
     @Override
