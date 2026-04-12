@@ -5,9 +5,9 @@ import com.sun.net.httpserver.HttpServer;
 import company.vk.edu.distrib.compute.Dao;
 import company.vk.edu.distrib.compute.KVService;
 
-import java.util.NoSuchElementException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.NoSuchElementException;
 
 public class LillymegaKVService implements KVService {
     private static final String METHOD_GET = "GET";
