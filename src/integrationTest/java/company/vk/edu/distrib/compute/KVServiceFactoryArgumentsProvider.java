@@ -9,6 +9,7 @@ import company.vk.edu.distrib.compute.artttnik.MyKVServiceFactory;
 import company.vk.edu.distrib.compute.ip.PopovIgorKVServiceFactoryImpl;
 import company.vk.edu.distrib.compute.gavrilova_ekaterina.InMemoryKVServiceFactory;
 import company.vk.edu.distrib.compute.b10nicle.B10nicleKVServiceFactory;
+import company.vk.edu.distrib.compute.korjick.CakeKVServiceFactory;
 import company.vk.edu.distrib.compute.nesterukia.file_system.NesterukiaFileSystemKVServiceFactory;
 import company.vk.edu.distrib.compute.nesterukia.in_memory.NesterukiaInMemoryKVServiceFactory;
 import company.vk.edu.distrib.compute.nihuaway00.NihuawayKVServiceFactory;
@@ -41,17 +42,18 @@ public class KVServiceFactoryArgumentsProvider implements ArgumentsProvider {
         PopovIgorKVServiceFactoryImpl.class,
         NesterukiaInMemoryKVServiceFactory.class,
         NesterukiaFileSystemKVServiceFactory.class,
-        Wolfram158KVServiceFactoryFileWithCacheImpl.class
+        Wolfram158KVServiceFactoryFileWithCacheImpl.class,
+        CakeKVServiceFactory.class
     );
 
     @Override
     @NonNull
     public Stream<? extends Arguments> provideArguments(
-        @NonNull ParameterDeclarations parameters,
-        @NonNull ExtensionContext context
+            @NonNull ParameterDeclarations parameters,
+            @NonNull ExtensionContext context
     ) {
         return factories.stream()
-            .map(ReflectionUtils::newInstance)
-            .map(Arguments::of);
+                .map(ReflectionUtils::newInstance)
+                .map(Arguments::of);
     }
 }
