@@ -45,7 +45,6 @@ public class LillymegaKVService implements KVService {
             HttpClient httpClient) throws IOException {
         this.dao = dao;
         LillymegaShardingSelector.Strategy strategy = LillymegaShardingSelector.resolveStrategy();
-        System.out.println("Sharding strategy: " + strategy);
 
         this.shardingSelector = clusterEndpoints.isEmpty()
                 ? null
@@ -159,33 +158,6 @@ public class LillymegaKVService implements KVService {
         }
         return !exchange.getRequestHeaders().containsKey(INTERNAL_HEADER)
                 && !selfEndpoint.equals(shardingSelector.selectEndpoint(id));
-    }
-
-    private String selectEndpoint(String id) {
-        String bestEndpoint = null;
-        long bestHash = Long.MIN_VALUE;
-
-        for (String endpoint : clusterEndpoints) {
-            long hash = rendezvousHash(id, endpoint);
-            if (hash > bestHash) {
-                bestHash = hash;
-                bestEndpoint = endpoint;
-            }
-        }
-
-        return bestEndpoint;
-    }
-
-    private long rendezvousHash(String key, String endpoint) {
-        String combined = key + "#" + endpoint;
-        long hash = 1469598103934665603L;
-
-        for (int i = 0; i < combined.length(); i++) {
-            hash ^= combined.charAt(i);
-            hash *= 1099511628211L;
-        }
-
-        return hash;
     }
 
     private void handlePut(HttpExchange exchange, String id) throws IOException {
