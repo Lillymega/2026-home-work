@@ -34,7 +34,15 @@ public class LillymegaKVService implements KVService {
     private final LillymegaShardingSelector shardingSelector;
 
     public LillymegaKVService(int port, Dao<byte[]> dao) throws IOException {
-        this(port, dao, null, List.of(), HttpClient.newHttpClient());
+        this.dao = dao;
+        this.selfEndpoint = null;
+        this.clusterEndpoints = List.of();
+        this.httpClient = HttpClient.newHttpClient();
+        this.shardingSelector = null;
+
+        this.server = HttpServer.create(new InetSocketAddress(port), 0);
+        this.server.createContext("/v0/status", this::handleStatus);
+        this.server.createContext("/v0/entity", this::handleEntity);
     }
 
     public LillymegaKVService(
@@ -42,16 +50,17 @@ public class LillymegaKVService implements KVService {
             Dao<byte[]> dao,
             String selfEndpoint,
             List<String> clusterEndpoints,
-            HttpClient httpClient) throws IOException {
+            HttpClient httpClient
+    ) throws IOException {
         this.dao = dao;
-
-        this.shardingSelector = new LillymegaShardingSelector(
-                clusterEndpoints,
-                LillymegaShardingSelector.resolveStrategy()
-        );
         this.selfEndpoint = selfEndpoint;
         this.clusterEndpoints = List.copyOf(clusterEndpoints);
         this.httpClient = httpClient;
+        this.shardingSelector = new LillymegaShardingSelector(
+                this.clusterEndpoints,
+                LillymegaShardingSelector.resolveStrategy()
+        );
+
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
         this.server.createContext("/v0/status", this::handleStatus);
         this.server.createContext("/v0/entity", this::handleEntity);
@@ -156,6 +165,7 @@ public class LillymegaKVService implements KVService {
         if (selfEndpoint == null || clusterEndpoints.isEmpty() || shardingSelector == null) {
             return false;
         }
+
         return !exchange.getRequestHeaders().containsKey(INTERNAL_HEADER)
                 && !selfEndpoint.equals(shardingSelector.selectEndpoint(id));
     }
