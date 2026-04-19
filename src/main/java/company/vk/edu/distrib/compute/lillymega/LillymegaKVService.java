@@ -44,11 +44,11 @@ public class LillymegaKVService implements KVService {
             List<String> clusterEndpoints,
             HttpClient httpClient) throws IOException {
         this.dao = dao;
-        LillymegaShardingSelector.Strategy strategy = LillymegaShardingSelector.resolveStrategy();
 
-        this.shardingSelector = clusterEndpoints.isEmpty()
-                ? null
-                : new LillymegaShardingSelector(clusterEndpoints, strategy);
+        this.shardingSelector = new LillymegaShardingSelector(
+                clusterEndpoints,
+                LillymegaShardingSelector.resolveStrategy()
+        );
         this.selfEndpoint = selfEndpoint;
         this.clusterEndpoints = List.copyOf(clusterEndpoints);
         this.httpClient = httpClient;
@@ -66,13 +66,11 @@ public class LillymegaKVService implements KVService {
         exchange.sendResponseHeaders(200, -1);
         exchange.close();
     }
-
     private void handleEntity(HttpExchange exchange) throws IOException {
         String id = extractId(exchange);
 
         if (id == null || id.isEmpty()) {
-            exchange.sendResponseHeaders(400, -1);
-            exchange.close();
+            sendEmptyResponse(exchange, 400);
             return;
         }
 
@@ -81,25 +79,27 @@ public class LillymegaKVService implements KVService {
             return;
         }
 
-        String method = exchange.getRequestMethod();
-
         try {
-            switch (method) {
-                case METHOD_GET -> handleGet(exchange, id);
-                case METHOD_PUT -> handlePut(exchange, id);
-                case METHOD_DELETE -> handleDelete(exchange, id);
-                default -> {
-                    exchange.sendResponseHeaders(405, -1);
-                    exchange.close();
-                }
-            }
+            handleEntityLocally(exchange, id);
         } catch (IllegalArgumentException e) {
-            exchange.sendResponseHeaders(400, -1);
-            exchange.close();
+            sendEmptyResponse(exchange, 400);
         } catch (NoSuchElementException e) {
-            exchange.sendResponseHeaders(404, -1);
-            exchange.close();
+            sendEmptyResponse(exchange, 404);
         }
+    }
+
+    private void handleEntityLocally(HttpExchange exchange, String id) throws IOException {
+        switch (exchange.getRequestMethod()) {
+            case METHOD_GET -> handleGet(exchange, id);
+            case METHOD_PUT -> handlePut(exchange, id);
+            case METHOD_DELETE -> handleDelete(exchange, id);
+            default -> sendEmptyResponse(exchange, 405);
+        }
+    }
+
+    private void sendEmptyResponse(HttpExchange exchange, int statusCode) throws IOException {
+        exchange.sendResponseHeaders(statusCode, -1);
+        exchange.close();
     }
 
     private void proxyRequest(HttpExchange exchange, String targetEndpoint) throws IOException {

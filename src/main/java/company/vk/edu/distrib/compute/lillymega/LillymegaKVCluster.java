@@ -11,14 +11,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LillymegaKVCluster implements KVCluster {
-    private final List<Integer> ports;
     private final List<String> endpoints;
     private final Map<String, KVService> runningNodes = new ConcurrentHashMap<>();
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public LillymegaKVCluster(List<Integer> ports) {
-        this.ports = List.copyOf(ports);
-        this.endpoints = this.ports.stream()
+        List<Integer> ports1 = List.copyOf(ports);
+        this.endpoints = ports1.stream()
                 .map(port -> "http://localhost:" + port)
                 .toList();
     }
